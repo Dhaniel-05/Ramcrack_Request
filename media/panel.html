@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="%%CSP%%">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="%%CSS%%">
+  <title>Petición</title>
+</head>
+<body>
+  <datalist id="hdrNames">
+    <option value="Accept"></option><option value="Accept-Language"></option><option value="Authorization"></option>
+    <option value="Cache-Control"></option><option value="Content-Type"></option><option value="Cookie"></option>
+    <option value="Origin"></option><option value="Referer"></option><option value="User-Agent"></option>
+    <option value="X-API-Key"></option><option value="X-Requested-With"></option>
+  </datalist>
+
+  <div class="topbar">
+    <input id="name" class="name" placeholder="Nombre de la petición" />
+    <span id="envBadge" class="badge" title="Entorno activo"></span>
+    <button id="save" class="secondary" title="Guardar (Ctrl+S)">Guardar</button>
+  </div>
+
+  <div class="main">
+    <!-- ======================= PETICIÓN ======================= -->
+    <div class="col left">
+      <div class="urlbar">
+        <select id="method" class="method">
+          <option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option>
+          <option>DELETE</option><option>HEAD</option><option>OPTIONS</option><option>PROPFIND</option>
+          <option value="CUSTOM">CUSTOM</option>
+        </select>
+        <input id="customMethod" class="hidden" placeholder="MÉTODO" spellcheck="false" />
+        <input id="url" placeholder="https://api.ejemplo.com/usuarios   o   {{baseUrl}}/usuarios" spellcheck="false" />
+        <button id="send" class="send">Enviar</button>
+      </div>
+
+      <div class="tabs" data-group="req">
+        <button class="tab active" data-tab="query">Query<sup id="cnt-query" class="cnt"></sup></button>
+        <button class="tab" data-tab="headers">Headers<sup id="cnt-headers" class="cnt"></sup></button>
+        <button class="tab" data-tab="auth">Auth<sup id="cnt-auth" class="cnt"></sup></button>
+        <button class="tab" data-tab="body">Body<sup id="cnt-body" class="cnt"></sup></button>
+        <button class="tab" data-tab="tests">Tests<sup id="cnt-tests" class="cnt"></sup></button>
+        <button class="tab" data-tab="prerun">Pre Run<sup id="cnt-prerun" class="cnt"></sup></button>
+      </div>
+
+      <!-- Query -->
+      <section class="pane scroll" data-group="req" data-pane="query">
+        <h4>Parámetros de la URL</h4>
+        <div id="params"></div>
+        <button id="addParam" class="secondary small">+ Añadir parámetro</button>
+        <div class="hint">Se sincronizan con la URL. Desmarca uno para quitarlo sin borrarlo.</div>
+      </section>
+
+      <!-- Headers -->
+      <section class="pane scroll hidden" data-group="req" data-pane="headers">
+        <h4>Headers</h4>
+        <div id="headers"></div>
+        <button id="addHeader" class="secondary small">+ Añadir header</button>
+      </section>
+
+      <!-- Auth -->
+      <section class="pane scroll hidden" data-group="req" data-pane="auth">
+        <div class="pills" data-target="authType">
+          <button class="pill-btn" data-value="none">Ninguna</button>
+          <button class="pill-btn" data-value="basic">Basic</button>
+          <button class="pill-btn" data-value="bearer">Bearer</button>
+          <button class="pill-btn" data-value="apikey">API Key</button>
+        </div>
+        <input type="hidden" id="authType" value="none" />
+        <div id="authBearer" class="hidden">
+          <h4>Bearer Token</h4>
+          <textarea id="authToken" class="token" placeholder="Token  (o {{token}})" spellcheck="false"></textarea>
+        </div>
+        <div id="authBasic" class="hidden stack">
+          <h4>Basic Auth</h4>
+          <input id="authUser" placeholder="Usuario" spellcheck="false" />
+          <input id="authPass" type="password" placeholder="Contraseña" />
+        </div>
+        <div id="authKey" class="hidden stack">
+          <h4>API Key</h4>
+          <input id="keyName" placeholder="Nombre (ej: X-API-Key)" spellcheck="false" />
+          <input id="keyValue" placeholder="Valor" spellcheck="false" />
+          <select id="keyIn"><option value="header">Enviar en Header</option><option value="query">Enviar en Query</option></select>
+        </div>
+        <div id="authNone" class="hint">Esta petición no envía credenciales. Si ya pones un header Authorization, tiene prioridad.</div>
+      </section>
+
+      <!-- Body -->
+      <section class="pane scroll hidden" data-group="req" data-pane="body">
+        <div class="pills" data-target="bodyType">
+          <button class="pill-btn" data-value="none">Ninguno</button>
+          <button class="pill-btn" data-value="json">JSON</button>
+          <button class="pill-btn" data-value="xml">XML</button>
+          <button class="pill-btn" data-value="text">Text</button>
+          <button class="pill-btn" data-value="form">Form</button>
+          <button class="pill-btn" data-value="formurl">Form-encode</button>
+          <button class="pill-btn" data-value="graphql">GraphQL</button>
+          <button class="pill-btn" data-value="binary">Binary</button>
+        </div>
+        <input type="hidden" id="bodyType" value="none" />
+
+        <div id="bodyText" class="hidden">
+          <div class="row-between"><h4 id="bodyTitle">Contenido</h4><button id="formatJson" class="link hidden">Formatear</button></div>
+          <div class="hl-wrap">
+            <pre id="bodyHl" class="hl-back" aria-hidden="true"></pre>
+            <textarea id="bodyContent" class="editor hl" spellcheck="false" placeholder='{ "nombre": "Ramcrack" }'></textarea>
+          </div>
+        </div>
+        <div id="bodyFormurl" class="hidden">
+          <h4>Form URL-Encoded</h4>
+          <div id="formurl"></div>
+          <button id="addFormurl" class="secondary small">+ Añadir campo</button>
+        </div>
+        <div id="bodyForm" class="hidden">
+          <h4>Multipart Form (campos y archivos)</h4>
+          <div id="formFields"></div>
+          <button id="addFormField" class="secondary small">+ Añadir campo</button>
+        </div>
+        <div id="bodyGql" class="hidden">
+          <h4>Query</h4>
+          <textarea id="gqlQuery" class="editor" spellcheck="false" placeholder="query { usuarios { id nombre } }"></textarea>
+          <h4>Variables (JSON)</h4>
+          <textarea id="gqlVars" class="editor short" spellcheck="false" placeholder='{ "id": 1 }'></textarea>
+        </div>
+        <div id="bodyBinary" class="hidden">
+          <h4>Archivo binario</h4>
+          <div class="kv"><input id="binaryPath" type="text" placeholder="Ruta del archivo" spellcheck="false" /><button id="pickBinary" class="secondary small">Elegir…</button></div>
+        </div>
+        <div id="bodyNone" class="hint">Esta petición no envía body. GET y HEAD nunca envían body.</div>
+      </section>
+
+      <!-- Tests -->
+      <section class="pane scroll hidden" data-group="req" data-pane="tests">
+        <h4>Aserciones</h4>
+        <div id="assertions"></div>
+        <button id="addAssertion" class="secondary small">+ Añadir test</button>
+        <h4 class="spaced">Set Env Variable</h4>
+        <div class="hint">Guarda un valor de la respuesta en una variable. Origen: <code>json.token</code>, <code>header.x-id</code>, <code>cookie.sid</code>, <code>text</code>, un valor fijo, <code>null</code> o <code>delete</code>. Destino: <code>{{variable}}</code>, o <code>{{variable, global}}</code>.</div>
+        <div id="setvars"></div>
+        <button id="addSetVar" class="secondary small">+ Añadir variable</button>
+      </section>
+
+      <!-- Pre Run -->
+      <section class="pane scroll hidden" data-group="req" data-pane="prerun">
+        <h4>Script Pre Run (JavaScript)</h4>
+        <div class="hint">Se ejecuta antes de enviar. Disponible: <code>tc.setVar('nombre', valor)</code>, <code>tc.getVar('nombre')</code> y <code>console.log()</code>.</div>
+        <textarea id="preRun" class="editor" spellcheck="false" placeholder="tc.setVar('fecha', new Date().toISOString());"></textarea>
+      </section>
+    </div>
+
+    <div id="splitter" class="splitter" title="Arrastra para redimensionar"></div>
+
+    <!-- ======================= RESPUESTA ======================= -->
+    <div class="col right">
+      <div id="statusLine" class="statusline"><span class="muted">Pulsa <b>Enviar</b> o <kbd>Ctrl</kbd>+<kbd>Enter</kbd> para ver la respuesta aquí.</span></div>
+
+      <div class="tabs" data-group="res">
+        <button class="tab active" data-tab="rbody">Respuesta</button>
+        <button class="tab" data-tab="rheaders">Headers<sup id="cnt-rheaders" class="cnt"></sup></button>
+        <button class="tab" data-tab="rcookies">Cookies<sup id="cnt-rcookies" class="cnt"></sup></button>
+        <button class="tab" data-tab="rresults">Resultados<sup id="cnt-rresults" class="cnt"></sup></button>
+        <button class="tab" data-tab="rdocs">Docs</button>
+        <button class="tab" data-tab="rsnippet" title="Código de la petición">&lt;/&gt;</button>
+      </div>
+
+      <section class="pane" data-group="res" data-pane="rbody">
+        <div class="resp-toolbar">
+          <div class="pills compact" data-target="respView">
+            <button class="pill-btn" data-value="json">JSON</button>
+            <button class="pill-btn" data-value="tree">Árbol</button>
+            <button class="pill-btn" data-value="text">Texto</button>
+            <button class="pill-btn" data-value="raw">Raw</button>
+          </div>
+          <input type="hidden" id="respView" value="json" />
+          <button id="copyResp" class="secondary small">Copiar</button>
+        </div>
+        <div class="view-area">
+          <div id="respJson" class="code lines"></div>
+          <div id="respTree" class="code tree hidden"></div>
+          <pre id="respText" class="code hidden"></pre>
+          <pre id="respRaw" class="code hidden"></pre>
+        </div>
+        <div class="filter">
+          <input id="filter" placeholder="Filtrar expresión…   ej: $.data[0].nombre    $.data[*].id" spellcheck="false" />
+          <div id="filterHint" class="hint">JSONPath: aplica a las vistas JSON y Árbol.</div>
+        </div>
+      </section>
+
+      <section class="pane scroll hidden" data-group="res" data-pane="rheaders"><div id="respHeaders" class="table-wrap"></div></section>
+      <section class="pane scroll hidden" data-group="res" data-pane="rcookies"><div id="respCookies" class="table-wrap"></div></section>
+      <section class="pane scroll hidden" data-group="res" data-pane="rresults"><div id="respResults"></div></section>
+
+      <section class="pane scroll hidden" data-group="res" data-pane="rdocs">
+        <h4>Documentación de la petición</h4>
+        <textarea id="description" class="editor" spellcheck="false" placeholder="Describe qué hace este endpoint, parámetros, códigos de respuesta…"></textarea>
+      </section>
+
+      <section class="pane scroll hidden" data-group="res" data-pane="rsnippet">
+        <div class="snip-bar">
+          <select id="snipLang">
+            <option value="curl">cURL</option>
+            <option value="fetch">JavaScript (fetch)</option>
+            <option value="axios">Node (axios)</option>
+            <option value="python">Python (requests)</option>
+          </select>
+          <button id="copySnip" class="secondary small">Copiar</button>
+        </div>
+        <pre id="snipCode" class="code"></pre>
+      </section>
+    </div>
+  </div>
+
+  <script nonce="%%NONCE%%" src="%%JS%%"></script>
+</body>
+</html>

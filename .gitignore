@@ -1,0 +1,15 @@
+# Dependencias y compilado (se regeneran con npm install / npm run compile)
+node_modules/
+out/
+
+# Instaladores sueltos en la raíz. El instalador oficial vive en release/ y SÍ se sube.
+/*.vsix
+
+# Datos que crea la propia extensión al probarla en esta carpeta
+.api-request/
+
+# Varios
+.vscode-test/
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,257 @@
+{
+  "name": "ramcrack-request",
+  "displayName": "Ramcrack Request",
+  "description": "Cliente REST simple e intuitivo dentro de VS Code. Colecciones, entornos, tests, importación de Postman/Thunder Client/cURL y snippets, sin cuentas ni nube.",
+  "version": "0.1.2",
+  "publisher": "ramcrack",
+  "author": {
+    "name": "Ramcrack"
+  },
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Testing",
+    "Other"
+  ],
+  "keywords": [
+    "api",
+    "rest",
+    "http",
+    "client",
+    "request",
+    "graphql",
+    "postman",
+    "thunder client"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "apiRequest",
+          "title": "Ramcrack Request",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "apiRequest": [
+        {
+          "id": "apiRequest.collections",
+          "name": "Colecciones"
+        },
+        {
+          "id": "apiRequest.environments",
+          "name": "Entornos"
+        },
+        {
+          "id": "apiRequest.history",
+          "name": "Actividad",
+          "visibility": "collapsed"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "apiRequest.collections",
+        "contents": "[Nueva petición](command:apiRequest.newRequest)\n[Nueva colección](command:apiRequest.newCollection)\n[Importar Postman / Thunder Client](command:apiRequest.importFile)\n[Importar cURL](command:apiRequest.importCurl)"
+      },
+      {
+        "view": "apiRequest.environments",
+        "contents": "Sin entornos. Crea uno para usar variables como {{baseUrl}}.\n[Nuevo entorno](command:apiRequest.newEnv)"
+      },
+      {
+        "view": "apiRequest.history",
+        "contents": "Aquí aparecerán las últimas peticiones que envíes."
+      }
+    ],
+    "commands": [
+      {
+        "command": "apiRequest.newCollection",
+        "title": "Nueva colección",
+        "category": "Ramcrack Request",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "apiRequest.newRequest",
+        "title": "Nueva petición",
+        "category": "Ramcrack Request",
+        "icon": "$(add)"
+      },
+      {
+        "command": "apiRequest.rename",
+        "title": "Renombrar",
+        "category": "Ramcrack Request"
+      },
+      {
+        "command": "apiRequest.duplicate",
+        "title": "Duplicar",
+        "category": "Ramcrack Request"
+      },
+      {
+        "command": "apiRequest.delete",
+        "title": "Eliminar",
+        "category": "Ramcrack Request"
+      },
+      {
+        "command": "apiRequest.importFile",
+        "title": "Importar colección (Postman / Thunder Client)",
+        "category": "Ramcrack Request",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "apiRequest.importCurl",
+        "title": "Importar cURL (desde el portapapeles)",
+        "category": "Ramcrack Request",
+        "icon": "$(terminal)"
+      },
+      {
+        "command": "apiRequest.newEnv",
+        "title": "Nuevo entorno",
+        "category": "Ramcrack Request",
+        "icon": "$(add)"
+      },
+      {
+        "command": "apiRequest.addEnvVar",
+        "title": "Añadir variable",
+        "category": "Ramcrack Request",
+        "icon": "$(add)"
+      },
+      {
+        "command": "apiRequest.deleteEnvVar",
+        "title": "Eliminar variable",
+        "category": "Ramcrack Request"
+      },
+      {
+        "command": "apiRequest.deleteEnv",
+        "title": "Eliminar entorno",
+        "category": "Ramcrack Request"
+      },
+      {
+        "command": "apiRequest.selectEnvironment",
+        "title": "Seleccionar entorno",
+        "category": "Ramcrack Request",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "apiRequest.editEnvironments",
+        "title": "Editar entornos (archivo JSON)",
+        "category": "Ramcrack Request",
+        "icon": "$(json)"
+      },
+      {
+        "command": "apiRequest.clearHistory",
+        "title": "Limpiar actividad",
+        "category": "Ramcrack Request",
+        "icon": "$(clear-all)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "apiRequest.newCollection",
+          "when": "view == apiRequest.collections",
+          "group": "navigation@1"
+        },
+        {
+          "command": "apiRequest.newRequest",
+          "when": "view == apiRequest.collections",
+          "group": "navigation@2"
+        },
+        {
+          "command": "apiRequest.importFile",
+          "when": "view == apiRequest.collections",
+          "group": "navigation@3"
+        },
+        {
+          "command": "apiRequest.importCurl",
+          "when": "view == apiRequest.collections",
+          "group": "navigation@4"
+        },
+        {
+          "command": "apiRequest.newEnv",
+          "when": "view == apiRequest.environments",
+          "group": "navigation@1"
+        },
+        {
+          "command": "apiRequest.editEnvironments",
+          "when": "view == apiRequest.environments",
+          "group": "navigation@2"
+        },
+        {
+          "command": "apiRequest.clearHistory",
+          "when": "view == apiRequest.history",
+          "group": "navigation@1"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "apiRequest.newRequest",
+          "when": "view == apiRequest.collections && viewItem == collection",
+          "group": "inline"
+        },
+        {
+          "command": "apiRequest.rename",
+          "when": "view == apiRequest.collections",
+          "group": "1_modify@1"
+        },
+        {
+          "command": "apiRequest.duplicate",
+          "when": "view == apiRequest.collections && viewItem == request",
+          "group": "1_modify@2"
+        },
+        {
+          "command": "apiRequest.delete",
+          "when": "view == apiRequest.collections",
+          "group": "2_danger"
+        },
+        {
+          "command": "apiRequest.addEnvVar",
+          "when": "view == apiRequest.environments && (viewItem == env || viewItem == globalEnv)",
+          "group": "inline"
+        },
+        {
+          "command": "apiRequest.deleteEnv",
+          "when": "view == apiRequest.environments && viewItem == env",
+          "group": "2_danger"
+        },
+        {
+          "command": "apiRequest.deleteEnvVar",
+          "when": "view == apiRequest.environments && viewItem == envVar",
+          "group": "2_danger"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Ramcrack Request",
+      "properties": {
+        "apiRequest.timeout": {
+          "type": "number",
+          "default": 30000,
+          "minimum": 1000,
+          "description": "Tiempo máximo de espera de cada petición, en milisegundos."
+        },
+        "apiRequest.followRedirects": {
+          "type": "boolean",
+          "default": true,
+          "description": "Seguir automáticamente las redirecciones (301, 302…)."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package --out release/ --allow-missing-repository",
+    "test:http": "node scripts/test-http.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.0.0",
+    "typescript": "^5.4.0"
+  }
+}
