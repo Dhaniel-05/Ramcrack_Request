@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3
+- Arranque explícito de la extensión (`activationEvents`), para editores derivados de VS Code donde el arranque automático no se disparaba.
+- Diagnóstico: canal de salida "Ramcrack Request" y mensaje con el motivo exacto si el arranque falla.
+
 ## 0.1.2
 - Nuevo icono de la barra lateral: un matraz de laboratorio.
 - Nuevo nombre: **Ramcrack Request** (identificador `ramcrack-request`). Los datos siguen en `.api-request/`.

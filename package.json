@@ -2,7 +2,7 @@
   "name": "ramcrack-request",
   "displayName": "Ramcrack Request",
   "description": "Cliente REST simple e intuitivo dentro de VS Code. Colecciones, entornos, tests, importación de Postman/Thunder Client/cURL y snippets, sin cuentas ni nube.",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "publisher": "ramcrack",
   "author": {
     "name": "Ramcrack"
@@ -34,6 +34,12 @@
     "thunder client"
   ],
   "main": "./out/extension.js",
+  "activationEvents": [
+    "onStartupFinished",
+    "onView:apiRequest.collections",
+    "onView:apiRequest.environments",
+    "onView:apiRequest.history"
+  ],
   "contributes": {
     "viewsContainers": {
       "activitybar": [
@@ -254,7 +260,9 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "package": "vsce package --out release/",
-    "test:http": "node scripts/test-http.js"
+    "test:http": "node scripts/test-http.js",
+    "test:activate": "node scripts/smoke-activate.js",
+    "test": "npm run test:http && npm run test:activate"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

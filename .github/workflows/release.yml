@@ -41,8 +41,8 @@ jobs:
       - name: Compilar
         run: npm run compile
 
-      - name: Probar el motor
-        run: npm run test:http
+      - name: Probar el motor y el arranque de la extensión
+        run: npm test
 
       - name: Crear el instalador (.vsix)
         run: npm run package

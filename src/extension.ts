@@ -6,8 +6,31 @@ import { RequestPanel } from './panel';
 import { HistoryEntry } from './types';
 import { parseCollectionJson, parseCurl } from './importers';
 
+/**
+ * Punto de entrada. Registra un canal de salida "Ramcrack Request" y, si el arranque falla,
+ * muestra el motivo exacto en un mensaje (en vez de dejar los botones sin respuesta).
+ */
 export function activate(context: vscode.ExtensionContext) {
+  const log = vscode.window.createOutputChannel('Ramcrack Request');
+  context.subscriptions.push(log);
+  const version = (context.extension.packageJSON as { version?: string }).version;
+  log.appendLine(`Iniciando Ramcrack Request v${version} en ${vscode.env.appName} ${vscode.version}`);
+  try {
+    start(context, log);
+    log.appendLine('Extensión iniciada correctamente.');
+  } catch (e) {
+    const err = e as Error;
+    log.appendLine(`ERROR al iniciar: ${err?.stack || err?.message || String(e)}`);
+    vscode.window
+      .showErrorMessage(`Ramcrack Request no pudo iniciar: ${err?.message || String(e)}`, 'Ver detalles')
+      .then((pick) => pick && log.show());
+    throw e;
+  }
+}
+
+function start(context: vscode.ExtensionContext, log: vscode.OutputChannel) {
   const store = new Store(context);
+  log.appendLine(`Datos en: ${store.collectionsPath()}`);
 
   context.subscriptions.push(
     vscode.window.createTreeView('apiRequest.collections', {
