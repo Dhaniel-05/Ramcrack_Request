@@ -8,6 +8,14 @@
     "name": "Ramcrack"
   },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Dhaniel-05/Ramcrack_Request.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Dhaniel-05/Ramcrack_Request/issues"
+  },
+  "homepage": "https://github.com/Dhaniel-05/Ramcrack_Request#readme",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -245,7 +253,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "package": "vsce package --out release/ --allow-missing-repository",
+    "package": "vsce package --out release/",
     "test:http": "node scripts/test-http.js"
   },
   "devDependencies": {
