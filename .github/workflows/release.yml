@@ -1,0 +1,77 @@
+# Publica una versión nueva de Ramcrack Request.
+# Se activa al subir una etiqueta de versión (por ejemplo v0.1.3):
+#   1. Compila la extensión y ejecuta las pruebas del motor.
+#   2. Crea el instalador (.vsix).
+#   3. Lo publica en GitHub → Releases (como "pre-release" mientras la versión sea 0.x).
+# Pasos para publicar: docs/PUBLICAR.md
+name: Publicar versión
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write # necesario para crear el Release
+
+jobs:
+  vsix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v5
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Comprobar que la etiqueta coincide con la versión de package.json
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "v$VERSION" != "${{ github.ref_name }}" ]; then
+            echo "::error::La etiqueta ${{ github.ref_name }} no coincide con la versión de package.json (v$VERSION). Cambia una de las dos."
+            exit 1
+          fi
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Compilar
+        run: npm run compile
+
+      - name: Probar el motor
+        run: npm run test:http
+
+      - name: Crear el instalador (.vsix)
+        run: npm run package
+
+      # Si el Release ya existe (por ejemplo al repetir la ejecución) se reutiliza y se reemplaza el archivo.
+      - name: Publicar el Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          FILE="release/ramcrack-request-$VERSION.vsix"
+
+          # Notas: la sección de esta versión en CHANGELOG.md
+          awk -v v="## $VERSION" '$0==v{f=1;next} /^## /{f=0} f' CHANGELOG.md > notas.md
+          [ -s notas.md ] || echo "Versión $VERSION" > notas.md
+          {
+            echo
+            echo "---"
+            echo "**Instalación:** descarga el archivo \`.vsix\` y ejecuta"
+            echo "\`code --install-extension ramcrack-request-$VERSION.vsix\`"
+          } >> notas.md
+
+          # Mientras la versión sea 0.x se marca como pre-release
+          FLAGS=""
+          case "$VERSION" in 0.*) FLAGS="--prerelease" ;; esac
+
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" "$FILE" --clobber
+          else
+            gh release create "$TAG" "$FILE" --title "Ramcrack Request v$VERSION" --notes-file notas.md $FLAGS
+          fi

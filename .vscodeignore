@@ -8,4 +8,7 @@ node_modules/**
 !node_modules/.keep
 *.vsix
 release/**
+.github/**
+docs/**
+notas.md
 .api-request/**

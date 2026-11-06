@@ -72,6 +72,8 @@ npm run test:http   # pruebas del motor
 npm run package     # genera el instalador en release/
 ```
 
+Para sacar una versión nueva (GitHub crea el Release solo): [docs/PUBLICAR.md](docs/PUBLICAR.md).
+
 `node scripts/serve.js` sirve la interfaz del panel en `http://localhost:5173/preview` con una API de ejemplo, para diseñar sin abrir VS Code.
 
 ## Licencia
