@@ -1,8 +1,46 @@
 # Ramcrack Request
 
-Cliente REST simple e intuitivo para VS Code. Sin cuentas, sin nube, sin límites de colecciones. Todo se guarda en archivos JSON de tu proyecto.
+**Prueba tus APIs sin salir de VS Code.** Ramcrack Request es un cliente REST en español: envías peticiones HTTP (GET, POST, PUT, DELETE…) a tu backend o a cualquier API, ves la respuesta al instante y guardas las peticiones en colecciones. Gratis, sin cuentas, sin nube y sin límites. Todo se guarda en archivos JSON de tu proyecto.
 
 Autor: **Ramcrack**
+
+## ¿Para qué sirve?
+
+Si programas un backend (Node, Express, Laravel, Spring, Django…) o consumes una API, antes tenías que abrir otra aplicación para probarla. Con esta extensión lo haces dentro del editor:
+
+- **Probar tu API mientras la desarrollas:** crear un registro, listar, editar, borrar, subir una imagen.
+- **Hacer login una vez y reutilizar el token** en las demás peticiones, sin copiar y pegar.
+- **Comprobar que responde bien:** tests automáticos sobre el código de estado, el tiempo y el contenido del JSON.
+- **Organizar y compartir tus pruebas** en carpetas, con variables por entorno (local, pruebas, producción) y guardadas en tu proyecto.
+- **Pasar de otra herramienta:** importa colecciones de Postman o Thunder Client, o pega un comando `cURL`.
+
+## Empezar en 1 minuto
+
+1. Abre la barra lateral **Ramcrack Request** (el icono del matraz).
+2. Pulsa **Nueva petición**, escribe la URL, por ejemplo `https://jsonplaceholder.typicode.com/todos/1`, y pulsa **Enviar** (`Ctrl+Enter`).
+3. Para guardarla en orden, crea una **colección** y dentro una **carpeta**.
+
+## Así se ve: un CRUD completo
+
+Ejemplo real contra una API de prueba con Node, Express y MySQL. Todo se hace desde VS Code.
+
+**Listar** (`GET`): la respuesta JSON llega coloreada, con estado, tamaño y tiempo. El token de acceso viene de una variable (`{{token}}`) y no está escrito en la petición.
+
+![Listar equipos con GET: respuesta 200 OK en JSON](media/capturas/1-listar-get.png)
+
+**Crear** (`POST`): se escribe el JSON y el servidor responde `201 Created` con el registro nuevo.
+
+![Crear un equipo con POST: respuesta 201 Created](media/capturas/2-crear-post.png)
+
+**Editar** (`PUT`) y **eliminar** (`DELETE`):
+
+![Editar un equipo con PUT: respuesta 200 OK](media/capturas/3-editar-put.png)
+
+![Eliminar un equipo con DELETE: respuesta 200 OK](media/capturas/4-eliminar-delete.png)
+
+**Y se comprueba en la base de datos:** los cambios hechos desde la extensión quedaron guardados.
+
+![La tabla equipos en MySQL Workbench con los datos creados desde la extensión](media/capturas/5-resultado-en-base-de-datos.png)
 
 ## Características
 

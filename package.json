@@ -1,7 +1,7 @@
 {
   "name": "ramcrack-request",
   "displayName": "Ramcrack Request",
-  "description": "Cliente REST simple e intuitivo dentro de VS Code. Colecciones, entornos, tests, importación de colecciones (Postman) y cURL, y snippets de código, sin cuentas ni nube.",
+  "description": "Prueba tus APIs REST sin salir de VS Code: envía peticiones HTTP, guarda colecciones con carpetas, usa entornos y variables, automatiza tests e importa desde Postman o cURL. En español, gratis y sin cuentas.",
   "version": "0.3.0",
   "publisher": "ramcrack",
   "author": {
@@ -40,7 +40,15 @@
     "request",
     "graphql",
     "rest client",
-    "api testing"
+    "api testing",
+    "cliente rest",
+    "cliente http",
+    "probar api",
+    "api tester",
+    "http client",
+    "rest api",
+    "curl",
+    "español"
   ],
   "main": "./out/extension.js",
   "activationEvents": [
