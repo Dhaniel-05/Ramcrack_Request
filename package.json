@@ -2,7 +2,7 @@
   "name": "ramcrack-request",
   "displayName": "Ramcrack Request",
   "description": "Cliente REST simple e intuitivo dentro de VS Code. Colecciones, entornos, tests, importación de colecciones (Postman) y cURL, y snippets de código, sin cuentas ni nube.",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "publisher": "ramcrack",
   "author": {
     "name": "Ramcrack"
