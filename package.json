@@ -95,13 +95,24 @@
         "command": "apiRequest.newCollection",
         "title": "Nueva colección",
         "category": "Ramcrack Request",
-        "icon": "$(new-folder)"
+        "icon": "$(library)"
       },
       {
         "command": "apiRequest.newRequest",
         "title": "Nueva petición",
         "category": "Ramcrack Request",
         "icon": "$(add)"
+      },
+      {
+        "command": "apiRequest.newFolder",
+        "title": "Nueva carpeta",
+        "category": "Ramcrack Request",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "apiRequest.moveTo",
+        "title": "Mover a…",
+        "category": "Ramcrack Request"
       },
       {
         "command": "apiRequest.rename",
@@ -165,6 +176,11 @@
         "icon": "$(json)"
       },
       {
+        "command": "apiRequest.clearCookies",
+        "title": "Limpiar cookies guardadas",
+        "category": "Ramcrack Request"
+      },
+      {
         "command": "apiRequest.clearHistory",
         "title": "Limpiar actividad",
         "category": "Ramcrack Request",
@@ -179,19 +195,24 @@
           "group": "navigation@1"
         },
         {
-          "command": "apiRequest.newRequest",
+          "command": "apiRequest.newFolder",
           "when": "view == apiRequest.collections",
           "group": "navigation@2"
         },
         {
-          "command": "apiRequest.importFile",
+          "command": "apiRequest.newRequest",
           "when": "view == apiRequest.collections",
           "group": "navigation@3"
         },
         {
-          "command": "apiRequest.importCurl",
+          "command": "apiRequest.importFile",
           "when": "view == apiRequest.collections",
           "group": "navigation@4"
+        },
+        {
+          "command": "apiRequest.importCurl",
+          "when": "view == apiRequest.collections",
+          "group": "navigation@5"
         },
         {
           "command": "apiRequest.newEnv",
@@ -212,8 +233,23 @@
       "view/item/context": [
         {
           "command": "apiRequest.newRequest",
-          "when": "view == apiRequest.collections && viewItem == collection",
-          "group": "inline"
+          "when": "view == apiRequest.collections && (viewItem == collection || viewItem == folder)",
+          "group": "inline@1"
+        },
+        {
+          "command": "apiRequest.newFolder",
+          "when": "view == apiRequest.collections && (viewItem == collection || viewItem == folder)",
+          "group": "inline@2"
+        },
+        {
+          "command": "apiRequest.newRequest",
+          "when": "view == apiRequest.collections && (viewItem == collection || viewItem == folder)",
+          "group": "0_new@1"
+        },
+        {
+          "command": "apiRequest.newFolder",
+          "when": "view == apiRequest.collections && (viewItem == collection || viewItem == folder)",
+          "group": "0_new@2"
         },
         {
           "command": "apiRequest.rename",
@@ -222,8 +258,13 @@
         },
         {
           "command": "apiRequest.duplicate",
-          "when": "view == apiRequest.collections && viewItem == request",
+          "when": "view == apiRequest.collections && (viewItem == request || viewItem == folder)",
           "group": "1_modify@2"
+        },
+        {
+          "command": "apiRequest.moveTo",
+          "when": "view == apiRequest.collections && (viewItem == request || viewItem == folder)",
+          "group": "1_modify@3"
         },
         {
           "command": "apiRequest.delete",
@@ -256,6 +297,16 @@
           "minimum": 1000,
           "description": "Tiempo máximo de espera de cada petición, en milisegundos."
         },
+        "apiRequest.useCookies": {
+          "type": "boolean",
+          "default": true,
+          "description": "Guardar las cookies que devuelven las respuestas (Set-Cookie) y enviarlas en las peticiones siguientes al mismo dominio, como hace un navegador. Se guardan en .api-request/cookies.json, que queda fuera de git."
+        },
+        "apiRequest.warnPlainSecrets": {
+          "type": "boolean",
+          "default": true,
+          "description": "Avisar al enviar una petición con un token, contraseña o API key escrito a mano (se guardaría en texto plano en .api-request/collections.json)."
+        },
         "apiRequest.followRedirects": {
           "type": "boolean",
           "default": true,
@@ -271,7 +322,11 @@
     "package": "node -e \"require('fs').mkdirSync('release',{recursive:true})\" && vsce package --out release/",
     "test:http": "node scripts/test-http.js",
     "test:activate": "node scripts/smoke-activate.js",
-    "test": "npm run test:http && npm run test:activate"
+    "test:store": "node scripts/test-store.js",
+    "test:cookies": "node scripts/test-cookies.js",
+    "test:editing": "node scripts/test-editing.js",
+    "smoke:lab": "node scripts/smoke-lab-crud.js",
+    "test": "npm run test:http && npm run test:store && npm run test:cookies && npm run test:editing && npm run test:activate"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

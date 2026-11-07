@@ -5,12 +5,14 @@ import { Store } from './store';
 import { sendRequest } from './http';
 import { ApiRequest } from './types';
 import { normalizeRequest } from './model';
+import { findPlainSecrets } from './secrets';
 
 export function readOptions() {
   const cfg = vscode.workspace.getConfiguration('apiRequest');
   return {
     timeoutMs: Math.max(1000, cfg.get<number>('timeout', 30000)),
     followRedirects: cfg.get<boolean>('followRedirects', true),
+    useCookies: cfg.get<boolean>('useCookies', true),
   };
 }
 
@@ -48,6 +50,8 @@ export class RequestPanel {
 
   private readonly panel: vscode.WebviewPanel;
   private readonly reqId: string;
+  /** Peticiones de las que ya se avisó en esta sesión (no se repite el aviso en cada envío). */
+  private static warned = new Set<string>();
 
   private constructor(
     private readonly context: vscode.ExtensionContext,
@@ -95,17 +99,48 @@ export class RequestPanel {
         case 'send': {
           const req = normalizeRequest(msg.request);
           this.persist(req);
+          this.warnPlainSecrets(req);
           const result = await sendRequest(req, {
             vars: this.store.allVars(),
+            activeEnv: this.store.activeEnv,
+            cookieJar: readOptions().useCookies ? this.store.getCookieJar() : undefined,
             options: readOptions(),
             setVar: (n, v, scope) => this.store.setVar(n, v, scope),
           });
+          if (readOptions().useCookies) {
+            this.store.saveCookies();
+          }
           await this.store.addHistory(req, result.status, result.timeMs);
           this.panel.webview.postMessage({ type: 'response', result });
           break;
         }
       }
     }, null, context.subscriptions);
+  }
+
+  /** Aviso discreto (no bloquea el envío): hay un secreto escrito a mano que se guardará en texto plano. */
+  private warnPlainSecrets(req: ApiRequest) {
+    const cfg = vscode.workspace.getConfiguration('apiRequest');
+    if (!cfg.get<boolean>('warnPlainSecrets', true) || !this.store.inWorkspace() || RequestPanel.warned.has(req.id)) {
+      return;
+    }
+    const found = findPlainSecrets(req);
+    if (!found.length) {
+      return;
+    }
+    RequestPanel.warned.add(req.id);
+    const NEVER = 'No volver a avisar';
+    void Promise.resolve(
+      vscode.window.showWarningMessage(
+        `"${req.name || 'Petición'}" lleva un valor sensible escrito a mano (${found.slice(0, 3).join(', ')}). ` +
+          'Se guarda en texto plano en .api-request/collections.json. Mejor usa una variable, por ejemplo {{token}}.',
+        NEVER
+      )
+    ).then((pick) => {
+      if (pick === NEVER) {
+        void cfg.update('warnPlainSecrets', false, vscode.ConfigurationTarget.Global);
+      }
+    });
   }
 
   private persist(req: ApiRequest) {
@@ -130,6 +165,7 @@ export class RequestPanel {
       .replace('%%CSP%%', csp)
       .replace(/%%NONCE%%/g, nonce)
       .replace('%%CSS%%', uri('main.css'))
+      .replace('%%EDIT%%', uri('editing.js'))
       .replace('%%JS%%', uri('main.js'));
   }
 }

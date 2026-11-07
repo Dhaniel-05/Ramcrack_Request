@@ -1,10 +1,11 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { Store } from './store';
+import { Container, Folder } from './types';
 import { CollectionsTree, EnvNode, EnvTree, HistoryTree, Node } from './tree';
 import { RequestPanel } from './panel';
 import { HistoryEntry } from './types';
-import { parseCollectionJson, parseCurl } from './importers';
+import { countImported, parseCollectionJson, parseCurl } from './importers';
 
 /**
  * Punto de entrada. Registra un canal de salida "Ramcrack Request" y, si el arranque falla,
@@ -32,9 +33,12 @@ function start(context: vscode.ExtensionContext, log: vscode.OutputChannel) {
   const store = new Store(context);
   log.appendLine(`Datos en: ${store.collectionsPath()}`);
 
+  const collectionsTree = new CollectionsTree(store);
   context.subscriptions.push(
     vscode.window.createTreeView('apiRequest.collections', {
-      treeDataProvider: new CollectionsTree(store),
+      treeDataProvider: collectionsTree,
+      dragAndDropController: collectionsTree,
+      showCollapseAll: true,
     }),
     vscode.window.createTreeView('apiRequest.environments', {
       treeDataProvider: new EnvTree(store),
@@ -78,12 +82,38 @@ function start(context: vscode.ExtensionContext, log: vscode.OutputChannel) {
   });
 
   // Abre una petición vacía al instante, sin preguntar nada.
-  // Si no hay colecciones se crea "Mis peticiones" automáticamente.
+  // Dentro de una carpeta si se pulsa su "+"; si no hay colecciones se crea "Mis peticiones".
   register('apiRequest.newRequest', (node?: Node) => {
     const collId = node?.collection.id ?? defaultCollection(store).id;
-    const req = store.addRequest(collId, DEFAULT_NAME);
+    const containerId =
+      node?.kind === 'folder'
+        ? node.folder.id
+        : node?.kind === 'request' && node.parent.id !== collId
+          ? node.parent.id
+          : undefined;
+    const req = store.addRequest(collId, DEFAULT_NAME, undefined, containerId);
     if (req) {
       RequestPanel.open(context, store, collId, req.id);
+    }
+  });
+
+  register('apiRequest.newFolder', async (node?: Node) => {
+    let target: { collId: string; containerId?: string } | undefined;
+    if (node?.kind === 'collection') {
+      target = { collId: node.collection.id };
+    } else if (node?.kind === 'folder') {
+      target = { collId: node.collection.id, containerId: node.folder.id };
+    } else if (node?.kind === 'request') {
+      target = { collId: node.collection.id, containerId: node.parent.id === node.collection.id ? undefined : node.parent.id };
+    } else {
+      target = await pickContainer(store, 'Dónde crear la carpeta');
+    }
+    if (!target) {
+      return;
+    }
+    const name = await vscode.window.showInputBox({ prompt: 'Nombre de la carpeta', placeHolder: 'Autenticación' });
+    if (name?.trim()) {
+      store.addFolder(target.collId, name.trim(), target.containerId);
     }
   });
 
@@ -95,13 +125,15 @@ function start(context: vscode.ExtensionContext, log: vscode.OutputChannel) {
     if (!node) {
       return;
     }
-    const current = node.kind === 'collection' ? node.collection.name : node.request.name;
+    const current = node.kind === 'collection' ? node.collection.name : node.kind === 'folder' ? node.folder.name : node.request.name;
     const name = await vscode.window.showInputBox({ prompt: 'Nuevo nombre', value: current });
     if (!name?.trim()) {
       return;
     }
     if (node.kind === 'collection') {
       store.renameCollection(node.collection.id, name.trim());
+    } else if (node.kind === 'folder') {
+      store.renameFolder(node.collection.id, node.folder.id, name.trim());
     } else {
       const req = store.getRequest(node.collection.id, node.request.id);
       if (req) {
@@ -114,6 +146,8 @@ function start(context: vscode.ExtensionContext, log: vscode.OutputChannel) {
   register('apiRequest.duplicate', (node?: Node) => {
     if (node?.kind === 'request') {
       store.duplicateRequest(node.collection.id, node.request.id);
+    } else if (node?.kind === 'folder') {
+      store.duplicateFolder(node.collection.id, node.folder.id);
     }
   });
 
@@ -121,15 +155,45 @@ function start(context: vscode.ExtensionContext, log: vscode.OutputChannel) {
     if (!node) {
       return;
     }
-    const label = node.kind === 'collection' ? node.collection.name : node.request.name;
-    const ok = await vscode.window.showWarningMessage(`¿Eliminar "${label}"?`, { modal: true }, 'Eliminar');
+    const label = node.kind === 'collection' ? node.collection.name : node.kind === 'folder' ? node.folder.name : node.request.name;
+    let detail: string | undefined;
+    const content = node.kind === 'collection' ? node.collection : node.kind === 'folder' ? node.folder : undefined;
+    if (content) {
+      const n = countImported(content);
+      if (n.requests || n.folders) {
+        detail = `Se eliminará también su contenido: ${n.requests} petición(es) y ${n.folders} carpeta(s). No se puede deshacer.`;
+      }
+    }
+    const ok = await vscode.window.showWarningMessage(`¿Eliminar "${label}"?`, { modal: true, detail }, 'Eliminar');
     if (ok !== 'Eliminar') {
       return;
     }
     if (node.kind === 'collection') {
       store.deleteCollection(node.collection.id);
+    } else if (node.kind === 'folder') {
+      store.deleteFolder(node.collection.id, node.folder.id);
     } else {
       store.deleteRequest(node.collection.id, node.request.id);
+    }
+  });
+
+  // "Mover a…": alternativa a arrastrar y soltar (también sirve con el teclado)
+  register('apiRequest.moveTo', async (node?: Node) => {
+    if (!node || node.kind === 'collection') {
+      return;
+    }
+    const excluded = new Set<string>();
+    if (node.kind === 'folder') {
+      collectIds(node.folder, excluded); // no se puede mover dentro de sí misma ni de sus subcarpetas
+    }
+    const target = await pickContainer(store, 'Mover a…', excluded);
+    if (!target) {
+      return;
+    }
+    if (node.kind === 'request') {
+      store.moveRequest(node.collection.id, node.request.id, target.collId, target.containerId);
+    } else {
+      store.moveFolder(node.collection.id, node.folder.id, target.collId, target.containerId);
     }
   });
 
@@ -150,9 +214,10 @@ function start(context: vscode.ExtensionContext, log: vscode.OutputChannel) {
       vscode.window.showErrorMessage('Formato no reconocido. Soporto Postman v2.1 y exportaciones de Thunder Client.');
       return;
     }
-    store.addCollection(imported.name, imported.requests);
+    store.addCollection(imported.name, imported.requests, imported.folders);
+    const n = countImported(imported);
     vscode.window.showInformationMessage(
-      `Importada "${imported.name}" con ${imported.requests.length} petición(es).`
+      `Importada "${imported.name}" con ${n.requests} petición(es) y ${n.folders} carpeta(s).`
     );
   });
 
@@ -174,13 +239,13 @@ function start(context: vscode.ExtensionContext, log: vscode.OutputChannel) {
       vscode.window.showErrorMessage('No pude interpretar ese comando cURL.');
       return;
     }
-    const collId = await pickCollection(store);
-    if (!collId) {
+    const target = await pickContainer(store, 'Dónde crear la petición');
+    if (!target) {
       return;
     }
-    const saved = store.addRequest(collId, req.name, req);
+    const saved = store.addRequest(target.collId, req.name, req, target.containerId);
     if (saved) {
-      RequestPanel.open(context, store, collId, saved.id);
+      RequestPanel.open(context, store, target.collId, saved.id);
     }
   });
 
@@ -191,13 +256,18 @@ function start(context: vscode.ExtensionContext, log: vscode.OutputChannel) {
     if (!entry) {
       return;
     }
-    const collId = await pickCollection(store, 'Guardar esta petición en…');
-    if (!collId) {
+    const target = await pickContainer(store, 'Guardar esta petición en…');
+    if (!target) {
       return;
     }
-    const saved = store.addRequest(collId, entry.request.name || `${entry.request.method} ${entry.request.url}`, entry.request);
+    const saved = store.addRequest(
+      target.collId,
+      entry.request.name || `${entry.request.method} ${entry.request.url}`,
+      entry.request,
+      target.containerId
+    );
     if (saved) {
-      RequestPanel.open(context, store, collId, saved.id);
+      RequestPanel.open(context, store, target.collId, saved.id);
     }
   });
   register('apiRequest.clearHistory', () => store.clearHistory());
@@ -280,6 +350,30 @@ function start(context: vscode.ExtensionContext, log: vscode.OutputChannel) {
     }
   });
 
+  // Cookies guardadas (credenciales de sesión): se listan por dominio, sin mostrar sus valores
+  register('apiRequest.clearCookies', async () => {
+    const jar = store.getCookieJar();
+    const domains = jar.domains();
+    if (!domains.length) {
+      vscode.window.showInformationMessage('No hay cookies guardadas.');
+      return;
+    }
+    const total = domains.reduce((n, d) => n + d.count, 0);
+    const pick = await vscode.window.showQuickPick(
+      [
+        { label: `$(trash) Todas (${total})`, domain: undefined as string | undefined },
+        ...domains.map((d) => ({ label: d.domain, description: `${d.count} cookie(s)`, domain: d.domain as string | undefined })),
+      ],
+      { placeHolder: 'Cookies guardadas: elige qué borrar' }
+    );
+    if (!pick) {
+      return;
+    }
+    const removed = jar.clear(pick.domain);
+    store.saveCookies();
+    vscode.window.showInformationMessage(`Se borraron ${removed} cookie(s).`);
+  });
+
   register('apiRequest.editEnvironments', async () => {
     const file = store.ensureEnvFile();
     await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(file));
@@ -292,23 +386,42 @@ function defaultCollection(store: Store) {
   return store.getCollections()[0] ?? store.addCollection('Mis peticiones');
 }
 
-async function pickCollection(store: Store, placeHolder = 'Colección donde crear la petición'): Promise<string | undefined> {
-  const cols = store.getCollections();
-  if (cols.length === 0) {
+function collectIds(c: Container, into: Set<string>) {
+  into.add(c.id);
+  c.folders.forEach((f: Folder) => collectIds(f, into));
+}
+
+/**
+ * Selector de destino: colecciones y carpetas con su ruta ("API / Auth"). Si no hay colecciones
+ * pide crear una; si hay un solo destino posible, lo usa sin preguntar.
+ * `containerId` queda vacío cuando el destino es la raíz de la colección.
+ */
+async function pickContainer(
+  store: Store,
+  placeHolder: string,
+  excluded: Set<string> = new Set()
+): Promise<{ collId: string; containerId?: string } | undefined> {
+  if (store.getCollections().length === 0) {
     const name = await vscode.window.showInputBox({
       prompt: 'Aún no tienes colecciones. Nombre de la nueva colección',
       placeHolder: 'Mi API',
     });
-    return name?.trim() ? store.addCollection(name.trim()).id : undefined;
+    return name?.trim() ? { collId: store.addCollection(name.trim()).id } : undefined;
   }
-  if (cols.length === 1) {
-    return cols[0].id;
+  const refs = store.listContainers().filter((r) => !excluded.has(r.containerId));
+  if (refs.length === 1) {
+    return { collId: refs[0].collectionId, containerId: refs[0].depth ? refs[0].containerId : undefined };
   }
   const pick = await vscode.window.showQuickPick(
-    cols.map((c) => ({ label: c.name, id: c.id })),
+    refs.map((r) => ({
+      label: (r.depth ? '$(folder) ' : '$(library) ') + r.label,
+      ref: r,
+    })),
     { placeHolder }
   );
-  return pick?.id;
+  return pick
+    ? { collId: pick.ref.collectionId, containerId: pick.ref.depth ? pick.ref.containerId : undefined }
+    : undefined;
 }
 
 export function deactivate() {}

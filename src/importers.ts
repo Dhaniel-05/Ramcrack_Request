@@ -1,11 +1,28 @@
 import { randomUUID } from 'crypto';
-import { ApiRequest, BodyType, KV } from './types';
+import { ApiRequest, BodyType, Folder, KV } from './types';
 import { normalizeRequest } from './model';
 
 export interface ImportedCollection {
   name: string;
+  /** peticiones de la raíz de la colección */
   requests: ApiRequest[];
+  /** carpetas reales (anidadas) con sus peticiones */
+  folders: Folder[];
 }
+
+/** Cuenta peticiones y carpetas de toda la jerarquía importada. */
+export function countImported(c: { requests: ApiRequest[]; folders: Folder[] }): { requests: number; folders: number } {
+  let requests = c.requests.length;
+  let folders = c.folders.length;
+  for (const f of c.folders) {
+    const n = countImported(f);
+    requests += n.requests;
+    folders += n.folders;
+  }
+  return { requests, folders };
+}
+
+const mkFolder = (name: string): Folder => ({ id: randomUUID(), name, requests: [], folders: [] });
 
 const mk = (partial: Record<string, unknown>): ApiRequest => normalizeRequest({ id: randomUUID(), ...partial });
 
@@ -209,7 +226,7 @@ export function parseCurl(command: string): ApiRequest | undefined {
 // =====================================================================
 //  Postman v2.1
 // =====================================================================
-function postmanRequest(item: any, prefix: string): ApiRequest | undefined {
+function postmanRequest(item: any): ApiRequest | undefined {
   const r = item.request;
   if (!r || typeof r === 'string') {
     return undefined;
@@ -262,7 +279,7 @@ function postmanRequest(item: any, prefix: string): ApiRequest | undefined {
   }
   const desc = typeof r.description === 'string' ? r.description : r.description?.content || '';
   return mk({
-    name: prefix + (item.name || 'Petición'),
+    name: item.name || 'Petición',
     method: (r.method || 'GET').toUpperCase(),
     url,
     headers,
@@ -272,14 +289,16 @@ function postmanRequest(item: any, prefix: string): ApiRequest | undefined {
   });
 }
 
-function walkPostman(items: any[], prefix: string, out: ApiRequest[]) {
+function walkPostman(items: any[], target: { requests: ApiRequest[]; folders: Folder[] }) {
   for (const it of items || []) {
     if (Array.isArray(it.item)) {
-      walkPostman(it.item, prefix + (it.name || 'Carpeta') + ' / ', out);
+      const folder = mkFolder(it.name || 'Carpeta');
+      walkPostman(it.item, folder);
+      target.folders.push(folder);
     } else {
-      const r = postmanRequest(it, prefix);
+      const r = postmanRequest(it);
       if (r) {
-        out.push(r);
+        target.requests.push(r);
       }
     }
   }
@@ -288,7 +307,7 @@ function walkPostman(items: any[], prefix: string, out: ApiRequest[]) {
 // =====================================================================
 //  Thunder Client (export JSON)
 // =====================================================================
-function thunderRequest(r: any, folders: Map<string, string>): ApiRequest {
+function thunderRequest(r: any): ApiRequest {
   const headers: KV[] = (r.headers || []).map((h: any) => ({ enabled: !h.isDisabled, key: h.name || '', value: h.value || '' }));
   const b = r.body || {};
   const body: Record<string, unknown> = { type: 'none' };
@@ -327,9 +346,8 @@ function thunderRequest(r: any, folders: Map<string, string>): ApiRequest {
     auth.username = r.auth.basic?.username || '';
     auth.password = r.auth.basic?.password || '';
   }
-  const fname = r.containerId ? folders.get(r.containerId) : '';
   return mk({
-    name: (fname ? fname + ' / ' : '') + (r.name || 'Petición'),
+    name: r.name || 'Petición',
     method: (r.method || 'GET').toUpperCase(),
     url: r.url || '',
     headers,
@@ -347,17 +365,37 @@ export function parseCollectionJson(text: string): ImportedCollection | undefine
     return undefined;
   }
   if (json?.info && Array.isArray(json.item)) {
-    const requests: ApiRequest[] = [];
-    walkPostman(json.item, '', requests);
-    return { name: json.info.name || 'Postman', requests };
+    const root = { requests: [] as ApiRequest[], folders: [] as Folder[] };
+    walkPostman(json.item, root);
+    return { name: json.info.name || 'Postman', ...root };
   }
   if (Array.isArray(json?.requests)) {
-    const folders = new Map<string, string>();
-    (json.folders || []).forEach((f: any) => folders.set(f._id, f.name));
-    return {
-      name: json.collectionName || 'Thunder Client',
-      requests: json.requests.map((r: any) => thunderRequest(r, folders)),
+    // Carpetas de Thunder Client: _id y containerId (carpeta padre; vacío = raíz). Se tolera un ciclo.
+    const byId = new Map<string, Folder>();
+    const parentOf = new Map<string, string>();
+    for (const f of json.folders || []) {
+      byId.set(f._id, mkFolder(f.name || 'Carpeta'));
+      parentOf.set(f._id, f.containerId || '');
+    }
+    const root = { requests: [] as ApiRequest[], folders: [] as Folder[] };
+    const hasCycle = (id: string) => {
+      const seen = new Set<string>();
+      for (let cur = parentOf.get(id); cur; cur = parentOf.get(cur)) {
+        if (cur === id || seen.has(cur)) {
+          return true;
+        }
+        seen.add(cur);
+      }
+      return false;
     };
+    for (const [id, folder] of byId) {
+      const parent = parentOf.get(id) ? byId.get(parentOf.get(id) as string) : undefined;
+      (parent && !hasCycle(id) ? parent : root).folders.push(folder);
+    }
+    for (const r of json.requests) {
+      (byId.get(r.containerId) ?? root).requests.push(thunderRequest(r));
+    }
+    return { name: json.collectionName || 'Thunder Client', ...root };
   }
   return undefined;
 }

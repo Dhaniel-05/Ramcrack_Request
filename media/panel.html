@@ -41,7 +41,7 @@
         <button class="tab" data-tab="auth">Auth<sup id="cnt-auth" class="cnt"></sup></button>
         <button class="tab" data-tab="body">Body<sup id="cnt-body" class="cnt"></sup></button>
         <button class="tab" data-tab="tests">Tests<sup id="cnt-tests" class="cnt"></sup></button>
-        <button class="tab" data-tab="prerun">Pre Run<sup id="cnt-prerun" class="cnt"></sup></button>
+        <button class="tab" data-tab="prerun">Pre-ejecución<sup id="cnt-prerun" class="cnt"></sup></button>
       </div>
 
       <!-- Query -->
@@ -99,6 +99,7 @@
           <button class="pill-btn" data-value="binary">Binary</button>
         </div>
         <input type="hidden" id="bodyType" value="none" />
+        <div id="bodyWarn" class="hint warn hidden"></div>
 
         <div id="bodyText" class="hidden">
           <div class="row-between"><h4 id="bodyTitle">Contenido</h4><button id="formatJson" class="link hidden">Formatear</button></div>
@@ -135,17 +136,17 @@
         <h4>Aserciones</h4>
         <div id="assertions"></div>
         <button id="addAssertion" class="secondary small">+ Añadir test</button>
-        <h4 class="spaced">Set Env Variable</h4>
+        <h4 class="spaced">Guardar en variable</h4>
         <div class="hint">Guarda un valor de la respuesta en una variable. Origen: <code>json.token</code>, <code>header.x-id</code>, <code>cookie.sid</code>, <code>text</code>, un valor fijo, <code>null</code> o <code>delete</code>. Destino: <code>{{variable}}</code>, o <code>{{variable, global}}</code>.</div>
         <div id="setvars"></div>
         <button id="addSetVar" class="secondary small">+ Añadir variable</button>
       </section>
 
-      <!-- Pre Run -->
+      <!-- Pre-ejecución -->
       <section class="pane scroll hidden" data-group="req" data-pane="prerun">
-        <h4>Script Pre Run (JavaScript)</h4>
-        <div class="hint">Se ejecuta antes de enviar. Disponible: <code>tc.setVar('nombre', valor)</code>, <code>tc.getVar('nombre')</code> y <code>console.log()</code>.</div>
-        <textarea id="preRun" class="editor" spellcheck="false" placeholder="tc.setVar('fecha', new Date().toISOString());"></textarea>
+        <h4>Script de pre-ejecución (JavaScript)</h4>
+        <div class="hint">Se ejecuta antes de enviar. Disponible: <code>rr.setVar('nombre', valor)</code>, <code>rr.getVar('nombre')</code> y <code>console.log()</code>. El nombre antiguo <code>tc</code> sigue funcionando por compatibilidad, pero se retirará en una versión futura.</div>
+        <textarea id="preRun" class="editor" spellcheck="false" placeholder="rr.setVar('fecha', new Date().toISOString());"></textarea>
       </section>
     </div>
 
@@ -211,6 +212,7 @@
     </div>
   </div>
 
+  <script nonce="%%NONCE%%" src="%%EDIT%%"></script>
   <script nonce="%%NONCE%%" src="%%JS%%"></script>
 </body>
 </html>

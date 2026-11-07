@@ -53,7 +53,7 @@ http.createServer(async (req, res) => {
   if (url.pathname === '/preview') {
     let html = fs.readFileSync(path.join(root, 'media/panel.html'), 'utf8')
       .replace('%%CSP%%', '').replace(/%%NONCE%%/g, '')
-      .replace('%%CSS%%', '/media/main.css').replace('%%JS%%', '/media/main.js')
+      .replace('%%CSS%%', '/media/main.css').replace('%%EDIT%%', '/media/editing.js').replace('%%JS%%', '/media/main.js')
       .replace('</head>', THEME + '</head>')
       .replace('<script nonce="" src="/media/main.js">', MOCK + '<script src="/media/main.js">');
     res.writeHead(200, { 'Content-Type': 'text/html' });

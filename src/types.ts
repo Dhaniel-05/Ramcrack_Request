@@ -56,11 +56,24 @@ export interface ApiRequest {
   preRun: string;
 }
 
+/** Carpeta dentro de una colección (o de otra carpeta). */
+export interface Folder {
+  id: string;
+  name: string;
+  requests: ApiRequest[];
+  folders: Folder[];
+}
+
 export interface Collection {
   id: string;
   name: string;
   requests: ApiRequest[];
+  /** Opcional en archivos de la 0.2.x; se normaliza a [] al cargar. */
+  folders: Folder[];
 }
+
+/** Colección o carpeta: ambas contienen peticiones y carpetas. */
+export type Container = Collection | Folder;
 
 export interface EnvFile {
   activeEnv: string;

@@ -154,7 +154,7 @@ export function runAssertions(
 
 export type Extracted = { kind: 'value'; value: string } | { kind: 'delete' } | { kind: 'missing' };
 
-/** Obtiene el valor de la respuesta según la fuente de "Set Env Variable". */
+/** Obtiene el valor de la respuesta según la fuente de "Guardar en variable". */
 export function extractSource(
   source: string,
   res: ResponseView,

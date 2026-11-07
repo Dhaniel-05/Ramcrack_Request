@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { ApiRequest } from './types';
+import { ApiRequest, Collection, Folder } from './types';
 
 export function newRequestTemplate(name: string): ApiRequest {
   return {
@@ -13,6 +13,33 @@ export function newRequestTemplate(name: string): ApiRequest {
     auth: { type: 'none', token: '', username: '', password: '', keyName: '', keyValue: '', keyIn: 'header' },
     tests: { assertions: [], setVars: [] },
     preRun: '',
+  };
+}
+
+const asArray = (v: unknown): any[] => (Array.isArray(v) ? v : []);
+
+/** Normaliza una carpeta (y todo lo que contiene) de forma recursiva. */
+export function normalizeFolder(f: any): Folder {
+  return {
+    ...(f && typeof f === 'object' ? f : {}),
+    id: f?.id ?? randomUUID(),
+    name: f?.name ?? 'Carpeta',
+    requests: asArray(f?.requests).map(normalizeRequest),
+    folders: asArray(f?.folders).map(normalizeFolder),
+  };
+}
+
+/**
+ * Normaliza una colección. Los archivos de la 0.2.x no tienen `folders`: se completa con [].
+ * Conserva campos desconocidos para no perder datos de versiones futuras.
+ */
+export function normalizeCollection(c: any): Collection {
+  return {
+    ...(c && typeof c === 'object' ? c : {}),
+    id: c?.id ?? randomUUID(),
+    name: c?.name ?? 'Colección',
+    requests: asArray(c?.requests).map(normalizeRequest),
+    folders: asArray(c?.folders).map(normalizeFolder),
   };
 }
 

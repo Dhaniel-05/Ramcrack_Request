@@ -170,7 +170,7 @@
       return { enabled: row.querySelector('input[type=checkbox]').checked, source: sel[0].value, key: t[0].value, op: sel[1].value, value: t[1].value };
     });
 
-  // ---- Set Env Variable ----
+  // ---- Guardar en variable ----
   function setVarRow(s) {
     const row = h('div', { className: 'kv' });
     row.append(
@@ -320,6 +320,16 @@
     $('bodyBinary').classList.toggle('hidden', b !== 'binary');
     $('formatJson').classList.toggle('hidden', b !== 'json');
     $('bodyTitle').textContent = { json: 'Contenido JSON', xml: 'Contenido XML', text: 'Texto plano' }[b] || 'Contenido';
+    const m = currentMethod();
+    const warn = $('bodyWarn');
+    if (b !== 'none' && (m === 'GET' || m === 'HEAD')) {
+      warn.textContent = `⚠ Con ${m} el body no se envía: se ignora. Cambia el método (por ejemplo a POST) o quita el body.`;
+    } else if (b !== 'none' && m === 'DELETE') {
+      warn.textContent = '⚠ Un DELETE con body es poco habitual: algunos servidores lo ignoran o lo rechazan.';
+    } else {
+      warn.textContent = '';
+    }
+    warn.classList.toggle('hidden', !warn.textContent);
     $('bodyContent').placeholder = b === 'xml' ? '<usuario><nombre>Ramcrack</nombre></usuario>' : b === 'text' ? 'Texto…' : '{ "nombre": "Ramcrack" }';
   }
 
@@ -397,6 +407,58 @@
       setStatus('<span class="err"><b>JSON inválido:</b> ' + esc(e.message) + '</span>');
     }
   });
+
+  // ---- ayudas de edición del body: sangría automática, Tab, autocierre (media/editing.js) ----
+  (function () {
+    const ta = $('bodyContent');
+    let escPressed = false; // Esc y luego Tab: deja salir del cuadro con el teclado
+    function apply(r) {
+      const old = ta.value;
+      if (r.value !== old) {
+        // se aplica como una edición normal para que Ctrl+Z la deshaga
+        let p = 0;
+        while (p < old.length && p < r.value.length && old[p] === r.value[p]) p++;
+        let q = 0;
+        while (q < old.length - p && q < r.value.length - p && old[old.length - 1 - q] === r.value[r.value.length - 1 - q]) q++;
+        ta.setSelectionRange(p, old.length - q);
+        const piece = r.value.slice(p, r.value.length - q);
+        if (!document.execCommand('insertText', false, piece)) {
+          ta.value = r.value;
+          onChange();
+        }
+      }
+      ta.setSelectionRange(r.start, r.end);
+    }
+    ta.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape') {
+        escPressed = true;
+        return;
+      }
+      const skipTab = escPressed && ev.key === 'Tab';
+      escPressed = false;
+      if (skipTab) return; // el foco sale del cuadro
+      const type = $('bodyType').value;
+      const v = ta.value;
+      const s = ta.selectionStart;
+      const e = ta.selectionEnd;
+      if (ev.ctrlKey && ev.shiftKey && ev.key.toLowerCase() === 'f' && type === 'json') {
+        ev.preventDefault();
+        $('formatJson').click();
+        return;
+      }
+      if (ev.ctrlKey || ev.metaKey || ev.altKey || ev.isComposing) return;
+      let r = null;
+      if (ev.key === 'Tab') r = RrEdit.tab(v, s, e, ev.shiftKey);
+      else if (ev.key === 'Enter' && !ev.shiftKey) r = RrEdit.enter(v, s, e);
+      else if (type === 'json' && ev.key === 'Backspace') r = RrEdit.backspace(v, s, e);
+      else if (type === 'json' && ev.key.length === 1) r = RrEdit.typeChar(v, s, e, ev.key);
+      if (r) {
+        ev.preventDefault();
+        apply(r);
+      }
+    });
+    ta.addEventListener('blur', () => { escPressed = false; });
+  })();
 
   function send() {
     // Si la petición aún se llama "Nueva petición", se nombra sola con el método y la ruta
@@ -699,10 +761,10 @@
         .join('');
     }
     if (r.varMessages.length) {
-      html += '<div class="res-title">Set Env Variable</div>' + r.varMessages.map((m) => `<div class="log-line">${esc(m)}</div>`).join('');
+      html += '<div class="res-title">Guardar en variable</div>' + r.varMessages.map((m) => `<div class="log-line">${esc(m)}</div>`).join('');
     }
     if (r.logs.length) {
-      html += '<div class="res-title">Consola (Pre Run)</div>' + r.logs.map((m) => `<div class="log-line">${esc(m)}</div>`).join('');
+      html += '<div class="res-title">Consola (pre-ejecución)</div>' + r.logs.map((m) => `<div class="log-line">${esc(m)}</div>`).join('');
     }
     $('respResults').innerHTML = html || '<div class="empty">Esta petición no tiene tests. Agrégalos en la pestaña Tests.</div>';
     setCount('cnt-rresults', r.tests.length, passed !== r.tests.length);
