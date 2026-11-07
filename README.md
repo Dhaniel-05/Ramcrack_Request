@@ -80,7 +80,7 @@ Para sacar una versión nueva (GitHub crea el Release solo): [docs/PUBLICAR.md](
 
 ## Marcas
 
-Postman, Thunder Client y RapidAPI son marcas de sus respectivos propietarios. Ramcrack Request es un proyecto independiente: no está afiliado, patrocinado ni respaldado por ellos. Esos nombres se mencionan únicamente para indicar la compatibilidad de formatos de importación.
+Postman y Thunder Client son marcas de sus respectivos propietarios. Ramcrack Request es un proyecto independiente: no está afiliado, patrocinado ni respaldado por ellos. Esos nombres se mencionan únicamente para indicar la compatibilidad de formatos de importación.
 
 ## Licencia
 
