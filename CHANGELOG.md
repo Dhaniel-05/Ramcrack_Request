@@ -3,6 +3,8 @@
 ## 0.2.0
 - Primera versión publicada en el Visual Studio Marketplace.
 - Icono PNG de la extensión y banner de la galería.
+- El empaquetado crea la carpeta `release/` si no existe (arregla el flujo automático en GitHub).
+- Textos neutrales: se quitan las menciones de marcas de las palabras clave y se añade un aviso de marcas.
 
 ## 0.1.3
 - Arranque explícito de la extensión (`activationEvents`), para editores derivados de VS Code donde el arranque automático no se disparaba.

@@ -265,7 +265,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "package": "vsce package --out release/",
+    "package": "node -e \"require('fs').mkdirSync('release',{recursive:true})\" && vsce package --out release/",
     "test:http": "node scripts/test-http.js",
     "test:activate": "node scripts/smoke-activate.js",
     "test": "npm run test:http && npm run test:activate"
