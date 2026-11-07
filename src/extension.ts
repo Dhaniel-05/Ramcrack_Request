@@ -77,7 +77,7 @@ function start(context: vscode.ExtensionContext, log: vscode.OutputChannel) {
     }
   });
 
-  // Abre una petición vacía al instante (sin preguntar nada), como Thunder Client.
+  // Abre una petición vacía al instante, sin preguntar nada.
   // Si no hay colecciones se crea "Mis peticiones" automáticamente.
   register('apiRequest.newRequest', (node?: Node) => {
     const collId = node?.collection.id ?? defaultCollection(store).id;

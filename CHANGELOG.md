@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.0
+- Primera versión publicada en el Visual Studio Marketplace.
+- Icono PNG de la extensión y banner de la galería.
+
 ## 0.1.3
 - Arranque explícito de la extensión (`activationEvents`), para editores derivados de VS Code donde el arranque automático no se disparaba.
 - Diagnóstico: canal de salida "Ramcrack Request" y mensaje con el motivo exacto si el arranque falla.

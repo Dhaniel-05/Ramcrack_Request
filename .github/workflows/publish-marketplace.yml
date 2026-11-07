@@ -1,0 +1,55 @@
+# Publica Ramcrack Request en el Visual Studio Marketplace.
+# Se ejecuta A MANO: GitHub → Actions → "Publicar en el Marketplace" → Run workflow
+# (elige la etiqueta de la versión, por ejemplo v0.2.0, en "Use workflow from").
+#
+# Usa "Trusted Publishing" (OIDC): no hace falta guardar ningún token en GitHub.
+# Antes hay que crear el publisher y la política de publicación de confianza:
+# ver docs/PUBLICAR.md, sección "Publicar en el Marketplace".
+# IMPORTANTE: el nombre de este archivo (publish-marketplace.yml) debe coincidir con el
+# que escribas en la política de Trusted Publishing del Marketplace.
+name: Publicar en el Marketplace
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # necesario para Trusted Publishing (OIDC)
+
+jobs:
+  marketplace:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v5
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Comprobar que se ejecuta desde una etiqueta de versión
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "${{ github.ref_type }}" != "tag" ] || [ "${{ github.ref_name }}" != "v$VERSION" ]; then
+            echo "::error::Ejecuta este flujo desde la etiqueta v$VERSION (ahora: ${{ github.ref_type }} ${{ github.ref_name }})."
+            exit 1
+          fi
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Compilar y probar
+        run: |
+          npm run compile
+          npm test
+
+      - name: Crear el instalador (.vsix)
+        run: npm run package
+
+      # Se usa la última versión de vsce porque --oidc es reciente
+      - name: Publicar en el Marketplace
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          npx --yes @vscode/vsce@latest publish --packagePath "release/ramcrack-request-$VERSION.vsix" --oidc

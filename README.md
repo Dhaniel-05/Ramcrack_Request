@@ -1,6 +1,6 @@
 # Ramcrack Request
 
-Cliente REST simple e intuitivo para VS Code, inspirado en Thunder Client. Sin cuentas, sin nube, sin límites de colecciones. Todo se guarda en archivos JSON de tu proyecto.
+Cliente REST simple e intuitivo para VS Code. Sin cuentas, sin nube, sin límites de colecciones. Todo se guarda en archivos JSON de tu proyecto.
 
 Autor: **Ramcrack**
 
@@ -29,17 +29,19 @@ Autor: **Ramcrack**
 
 ## Instalación
 
-El instalador está en la carpeta `release/` del repositorio. Descarga el `.vsix` más reciente e instálalo:
+Descarga el `.vsix` más reciente desde la sección **Releases** del repositorio (https://github.com/Dhaniel-05/Ramcrack_Request/releases) e instálalo:
 
 ```bash
-code --install-extension release/ramcrack-request-0.1.2.vsix
+code --install-extension ramcrack-request-0.1.3.vsix
 ```
 
 O desde VS Code: **Extensiones** (`Ctrl+Shift+X`) → menú `···` → **Instalar desde VSIX…**. Luego recarga la ventana.
 
+En Windows, Defender puede marcar la extensión por error (falso positivo). Guía paso a paso, con la exclusión en Defender y la verificación del archivo: [docs/INSTALACION_ESTUDIANTES.md](docs/INSTALACION_ESTUDIANTES.md).
+
 ## Uso rápido
 
-1. Abre el icono **Ramcrack Request** (flechas ⇄) en la barra lateral.
+1. Abre el icono **Ramcrack Request** (un matraz de laboratorio) en la barra lateral.
 2. Crea una colección y una petición (o importa una desde Postman, Thunder Client o cURL).
 3. Escribe la URL y pulsa **Enviar**.
 
@@ -75,6 +77,10 @@ npm run package     # genera el instalador en release/
 Para sacar una versión nueva (GitHub crea el Release solo): [docs/PUBLICAR.md](docs/PUBLICAR.md).
 
 `node scripts/serve.js` sirve la interfaz del panel en `http://localhost:5173/preview` con una API de ejemplo, para diseñar sin abrir VS Code.
+
+## Marcas
+
+Postman, Thunder Client y RapidAPI son marcas de sus respectivos propietarios. Ramcrack Request es un proyecto independiente: no está afiliado, patrocinado ni respaldado por ellos. Esos nombres se mencionan únicamente para indicar la compatibilidad de formatos de importación.
 
 ## Licencia
 

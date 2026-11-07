@@ -2,8 +2,10 @@
 node_modules/
 out/
 
-# Instaladores sueltos en la raíz. El instalador oficial vive en release/ y SÍ se sube.
-/*.vsix
+# Instaladores (.vsix): se generan con "npm run package". Los oficiales se publican en
+# GitHub → Releases (los crea el flujo automático), no se guardan en el repositorio.
+*.vsix
+release/
 
 # Datos que crea la propia extensión al probarla en esta carpeta
 .api-request/

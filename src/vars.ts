@@ -45,7 +45,7 @@ function splitArgs(s: string): string[] {
 }
 
 /**
- * Variables de sistema estilo Thunder Client:
+ * Variables de sistema (generadores de datos de prueba):
  * {{#guid}} {{#name}} {{#string}} {{#number}} {{#number, 1, 10}} {{#email}} {{#bool}}
  * {{#enum, a, b}} {{#date}} {{#date, 'X'}} {{#date, 'YYYY-MM-DD hh:mm:ss'}} {{#dateISO}}
  */
