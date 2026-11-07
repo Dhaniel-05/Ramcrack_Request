@@ -2,7 +2,7 @@
   "name": "ramcrack-request",
   "displayName": "Ramcrack Request",
   "description": "Prueba tus APIs REST sin salir de VS Code: envía peticiones HTTP, guarda colecciones con carpetas, usa entornos y variables, automatiza tests e importa desde Postman o cURL. En español, gratis y sin cuentas.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "publisher": "ramcrack",
   "author": {
     "name": "Ramcrack"
