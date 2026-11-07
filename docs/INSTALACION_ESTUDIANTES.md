@@ -6,6 +6,8 @@ Esta guía te lleva paso a paso, desde descargar la extensión de GitHub hasta t
 
 ---
 
+> **Recomendado: instálala desde el Marketplace de VS Code.** Es más simple y no necesita esta guía: abre **Extensiones** (`Ctrl+Shift+X`), busca **Ramcrack Request** y pulsa **Instalar**, o ejecuta `code --install-extension ramcrack.ramcrack-request`. Esta guía es el **plan B**, para cuando no puedas usar el Marketplace (por ejemplo, equipos sin acceso a él) o si prefieres instalar un archivo concreto.
+
 ## Antes de empezar
 
 | Necesitas | Cómo comprobarlo |

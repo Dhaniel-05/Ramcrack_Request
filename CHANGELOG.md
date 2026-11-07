@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+- README: la instalación recomendada pasa a ser el Marketplace de VS Code; el `.vsix` queda como alternativa.
+- Enlace de patrocinio (GitHub Sponsors): botón **Sponsor** en el repositorio y en la página del Marketplace.
+- La guía de estudiantes pasa a ser el plan B, y se documenta el error `Parameter name: v1` al subir por el cargador equivocado.
+
 ## 0.2.0
 - Primera versión publicada en el Visual Studio Marketplace.
 - Icono PNG de la extensión y banner de la galería.

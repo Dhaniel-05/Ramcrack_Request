@@ -22,6 +22,9 @@
     "theme": "dark"
   },
   "pricing": "Free",
+  "sponsor": {
+    "url": "https://github.com/sponsors/Dhaniel-05"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
